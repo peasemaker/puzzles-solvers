@@ -1,0 +1,7 @@
+{
+  "top": ["B", "x", "C", "C", "C", "x"],
+  "bottom": ["A", "x", "B", "B", "A", "C"],
+  "left": ["B", "C", "A", "A", "C", "B"],
+  "right": ["C", "B", "x", "x", "x", "x"],
+  "letters": "ABC"
+}
