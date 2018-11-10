@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const levels_1 = require("./levels");
+const helpers_1 = require("../helpers");
 const fs = require('fs');
 const solutions = require('./solutions.json');
 for (let levelKey of Object.keys(levels_1.default)) {
@@ -11,7 +12,7 @@ for (let levelKey of Object.keys(levels_1.default)) {
     console.log(levelKey);
     ((gameString) => {
         const gameGrid = gameString.trim().split(/\n/).filter(x => x).map(x => x.trim().split('').map(x => parseInt(x)));
-        if (gameGrid.length !== 11 || gameGrid.some(row => row.length !== 11)) {
+        if (gameGrid.length !== 9 || gameGrid.some(row => row.length !== 9)) {
             console.log('wrong grid');
             return;
         }
@@ -28,31 +29,10 @@ for (let levelKey of Object.keys(levels_1.default)) {
                 return j + (cell !== 0 ? 1 : 0);
             }, 0);
         }, 0);
-        function clone(arr) {
-            return arr.map(row => [...row]);
-        }
-        function getNeighbors(grid, cell) {
-            let neighbors = [null, null, null, null];
-            const gridHeight = grid.length;
-            const gridWidth = grid[0].length;
-            if (cell.x > 0) {
-                neighbors[0] = { x: cell.x - 1, y: cell.y };
-            }
-            if (cell.x < gridHeight - 1) {
-                neighbors[1] = { x: cell.x + 1, y: cell.y };
-            }
-            if (cell.y > 0) {
-                neighbors[2] = { x: cell.x, y: cell.y - 1 };
-            }
-            if (cell.y < gridWidth - 1) {
-                neighbors[3] = { x: cell.x, y: cell.y + 1 };
-            }
-            return neighbors;
-        }
         function getStartCells(grid) {
             const startNumbers = [];
             let id = 1;
-            const newGrid = clone(grid);
+            const newGrid = helpers_1.clone(grid);
             for (let [x, row] of grid.entries()) {
                 for (let [y, cell] of row.entries()) {
                     if (cell !== 0) {
@@ -205,7 +185,7 @@ for (let levelKey of Object.keys(levels_1.default)) {
         }
         function checkChainRule(grid) {
             let start = { x: -1, y: -1 };
-            let testGrid = clone(grid);
+            let testGrid = helpers_1.clone(grid);
             for (let [x, row] of grid.entries()) {
                 if (start.x > 0 && start.y > 0) {
                     break;
@@ -221,7 +201,7 @@ for (let levelKey of Object.keys(levels_1.default)) {
                 return false;
             }
             testGrid[start.x][start.y] = -1;
-            let neighbors = getNeighbors(testGrid, start);
+            let neighbors = helpers_1.get4Neighbors(testGrid, start);
             neighbors = neighbors.filter(i => i && testGrid[i.x][i.y] !== -1 && testGrid[i.x][i.y] !== 0);
             const fillAmount = grid.reduce((i, row) => {
                 return i + row.reduce((j, cell) => {
@@ -235,7 +215,7 @@ for (let levelKey of Object.keys(levels_1.default)) {
                 for (let n of neighbors) {
                     if (n !== null) {
                         testGrid[n.x][n.y] = -1;
-                        const newNeighbors = getNeighbors(testGrid, n).filter(i => i && testGrid[i.x][i.y] !== -1 && testGrid[i.x][i.y] !== 0);
+                        const newNeighbors = helpers_1.get4Neighbors(testGrid, n).filter(i => i && testGrid[i.x][i.y] !== -1 && testGrid[i.x][i.y] !== 0);
                         traverse(newNeighbors);
                     }
                 }
@@ -253,7 +233,7 @@ for (let levelKey of Object.keys(levels_1.default)) {
             for (let [x, row] of grid.entries()) {
                 for (let [y, cell] of row.entries()) {
                     if (cell !== 0) {
-                        const neighbors = getNeighbors(grid, { x, y });
+                        const neighbors = helpers_1.get4Neighbors(grid, { x, y });
                         for (let n of neighbors) {
                             if (n !== null) {
                                 const nCell = grid[n.x][n.y];
@@ -294,12 +274,12 @@ for (let levelKey of Object.keys(levels_1.default)) {
                     .sort((a, b) => a.length - b.length);
                 const planks = planksArray[0];
                 for (let plank of planks) {
-                    const newGrid = clone(grid);
+                    const newGrid = helpers_1.clone(grid);
                     const newSet = new Set(usedIds);
                     let flag = false;
                     for (let c of plank) {
                         newGrid[c.x][c.y] = c.id;
-                        let neighbors = getNeighbors(grid, c).filter(n => n);
+                        let neighbors = helpers_1.get4Neighbors(grid, c).filter(n => n);
                         if (neighbors.some(n => connections[c.id - 1].never.has(grid[n.x][n.y]))) {
                             flag = true;
                             continue;
@@ -336,7 +316,7 @@ for (let levelKey of Object.keys(levels_1.default)) {
                     let id2 = j + 1;
                     let countConnections = 0;
                     possiblePlanks[i].forEach((planks1) => {
-                        const testGrid = clone(startGrid);
+                        const testGrid = helpers_1.clone(startGrid);
                         for (let p1 of planks1) {
                             testGrid[p1.x][p1.y] = id1;
                         }
@@ -346,7 +326,7 @@ for (let levelKey of Object.keys(levels_1.default)) {
                                 return;
                             }
                             for (let p2 of planks2) {
-                                let neighbors = getNeighbors(testGrid, p2).filter(n => n);
+                                let neighbors = helpers_1.get4Neighbors(testGrid, p2).filter(n => n);
                                 if (neighbors.some(n => testGrid[n.x][n.y] == id1)) {
                                     isConnected = true;
                                 }

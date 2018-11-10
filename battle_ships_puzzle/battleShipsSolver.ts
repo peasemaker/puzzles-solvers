@@ -1,4 +1,5 @@
 import levels, { Level } from './levels';
+import { clone, get8Neighbors } from "../helpers";
 
 enum CellType {
     Empty = 0,
@@ -11,59 +12,7 @@ enum CellType {
     Bottom = 7
 }
 
-interface Cell {
-    x: number;
-    y: number;
-}
-
-type Neighbors = (Cell | null)[];
-
 type Grid = number[][];
-
-function clone(arr: any[]): any[] {
-    return arr.map(row => [...row]);
-}
-
-// [left, top-left, top, top-right, right, bottom-right, bottom, bottom-left]
-function getNeighbors(grid: Grid, cell: Cell): Neighbors {
-    let neighbors: Neighbors = new Array(8).fill(null);
-    const gridHeight = grid.length;
-    const gridWidth = grid[0].length;
-
-    if (cell.x > 0) {
-        neighbors[0] = {x: cell.x - 1, y: cell.y};
-    }
-
-    if (cell.y > 0 && cell.x > 0) {
-        neighbors[1] = {x: cell.x - 1, y: cell.y - 1};
-    }
-
-    if (cell.y > 0) {
-        neighbors[2] = {x: cell.x, y: cell.y - 1};
-    }
-
-    if (cell.y > 0 && cell.x < gridHeight - 1) {
-        neighbors[3] = {x: cell.x + 1, y: cell.y - 1};
-    }
-
-    if (cell.x < gridHeight - 1) {
-        neighbors[4] = {x: cell.x + 1, y: cell.y};
-    }
-
-    if (cell.y < gridWidth - 1 && cell.x < gridHeight - 1) {
-        neighbors[5] = {x: cell.x + 1, y: cell.y + 1};
-    }
-
-    if (cell.y < gridWidth - 1) {
-        neighbors[6] = {x: cell.x, y: cell.y + 1};
-    }
-
-    if (cell.y < gridWidth - 1 && cell.x > 0) {
-        neighbors[7] = {x: cell.x - 1, y: cell.y + 1};
-    }
-
-    return neighbors;
-}
 
 function checkValues(grid: Grid, rows: number[], cols: number[]): boolean {
     if (rows.some(r => r < 0) || cols.some(c => c < 0)) {
@@ -117,7 +66,7 @@ function solve(level: Level): Grid[] {
     if (startGrid) {
         for (let [y, row] of gameGrid.entries()) {
             for (let [x, _cell] of row.entries()) {
-                const neighbors = getNeighbors(gameGrid, {x, y});
+                const neighbors = get8Neighbors(gameGrid, {x, y});
                 if (gameGrid[y][x] > CellType.Dot) {
                     cols[x]--;
                     rows[y]--;
@@ -216,12 +165,6 @@ function solve(level: Level): Grid[] {
                         }
 
                         if (direction == 'horizontal') {
-                            // if (x == 8 && y == 5 && shipLength == 2) {
-                            //     console.log(printSolution(grid));
-                            //     console.log(horizontalCount);
-                            //     console.log(rows[y]);
-                            //     console.log('########');
-                            // }
                             if (shipLength - horizontalCount <= rows[y] && x + shipLength <= rows.length) {
                                 const newGrid = clone(grid);
                                 const newRows = [...rows];
@@ -257,7 +200,7 @@ function solve(level: Level): Grid[] {
 
                                     newGrid[cell.y][cell.x] = -1 * cellType;
 
-                                    const neighbors = getNeighbors(newGrid, cell);
+                                    const neighbors = get8Neighbors(newGrid, cell);
 
                                     for (let [ix, n] of neighbors.entries()) {
                                         if (shipLength > 1) {
@@ -322,7 +265,7 @@ function solve(level: Level): Grid[] {
 
                                     newGrid[cell.y][cell.x] = -1 * cellType;
 
-                                    const neighbors = getNeighbors(newGrid, cell);
+                                    const neighbors = get8Neighbors(newGrid, cell);
 
                                     for (let [ix, n] of neighbors.entries()) {
                                         if (shipLength > 1) {
@@ -367,7 +310,7 @@ function solve(level: Level): Grid[] {
 
 console.time('solve');
 
-const solutions = solve(levels.level4);
+const solutions = solve(levels.level128);
 console.timeEnd('solve');
 
 for (let [i, s] of solutions.entries()) {

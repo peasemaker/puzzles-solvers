@@ -78,6 +78,11 @@ const levels: {[key: string]: Level} = {
         rows: [3,2,3,5,3,3,0,6],
         cols: [5,1,2,5,2,3,1,6],
         shipsMax: 5
+    },
+    level128: {
+        rows: [0,6,2,1,0,2,1,3,3,5,2],
+        cols: [3,1,5,0,0,7,0,2,3,4,0],
+        shipsMax: 5
     }
 };
 

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        #counter {
+            position: absolute;
+            font-size: 30px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="game"></canvas>
+    <h1 id="counter"></h1>
+    <script>
+        const gridString = `
+            . . . . . . . . . ?
+            4 . . 3,? 1,2 . 3,? . . .
+            . . 3 . . . . . 2,2 .
+            . . . . . . . . . .
+            . . ?,? 2,? . 1,? . . 6 .
+            . . . . . . . . . .
+            . . . . . 2,? ?,? . . 4
+            0 . . . . . . . . .
+            . . . 2,? . ?,? . . . .
+            . 2 . . . . . . ? .
+        `;
+
+        const grid = gridString.trim().split(/\n/).filter(x => !!x).map(x => x.trim().split(' ').map(x => x.split(',')));
+
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const size = 40;
+        const width = grid[0].length * size;
+        const height = grid.length * size;
+        const counterTitle = document.getElementById('counter');
+        canvas.width = width;
+        canvas.height = height;
+        ctx.font= '25px Calibri';
+
+        let counter = 0;
+
+        function render() {
+            for (let [y, row] of grid.entries()) {
+                for (let [x, cell] of row.entries()) {
+                    counterTitle.innerText = counter;
+                    if (cell.length === 1) {
+                        switch (cell[0]) {
+                            case '.': {
+                                ctx.fillStyle = '#000';
+                                ctx.strokeStyle = 'green';
+                                ctx.fillRect(x * size, y * size, size, size);
+                                ctx.strokeRect(x * size, y * size, size, size);
+                                break;
+                            }
+                            case '!': {
+                                ctx.fillStyle = '#fff';
+                                ctx.strokeStyle = 'green';
+                                ctx.fillRect(x * size, y * size, size, size);
+                                ctx.strokeRect(x * size, y * size, size, size);
+                                break;
+                            }
+                            case 'x': {
+                                ctx.fillStyle = '#000';
+                                ctx.strokeStyle = 'green';
+                                ctx.fillRect(x * size, y * size, size, size);
+                                ctx.strokeRect(x * size, y * size, size, size);
+                                ctx.fillStyle = '#fff';
+                                ctx.fillText('.', x * size + 15, y * size + 20);
+                                break;
+                            }
+                            default: {
+                                ctx.fillStyle = '#000';
+                                ctx.strokeStyle = 'green';
+                                ctx.fillRect(x * size, y * size, size, size);
+                                ctx.strokeRect(x * size, y * size, size, size);
+                                ctx.fillStyle = '#fff';
+                                ctx.fillText(cell[0], x * size + 15, y * size + 30);
+                                break;
+                            }
+                        }
+                    } else {
+                        ctx.fillStyle = '#000';
+                        ctx.strokeStyle = 'green';
+                        ctx.fillRect(x * size, y * size, size, size);
+                        ctx.strokeRect(x * size, y * size, size, size);
+                        ctx.fillStyle = '#fff';
+                        for (let [i, n] of cell.entries()) {
+                            ctx.fillText(n, x * size + i * 14, y * size + 30);
+                        }
+                    }
+                }
+            }
+        }
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / size);
+            const y = Math.floor((e.clientY - rect.top) / size);
+            const cell = grid[y][x];
+
+            if (cell.length === 1) {
+                if (cell[0] === '.') {
+                    grid[y][x] = '!';
+                    counter++;
+                }
+                if (cell[0] === '!') {
+                    grid[y][x] = 'x';
+                    counter--;
+                }
+                if (cell[0] === 'x') {
+                    grid[y][x] = '.';
+                }
+            }
+        });
+
+        function loop() {
+            render();
+            window.requestAnimationFrame(loop);
+        }
+
+        loop();
+
+    </script>
+</body>
+</html>

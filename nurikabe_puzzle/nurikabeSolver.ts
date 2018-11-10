@@ -1,377 +1,287 @@
-(() => {
-    interface Cell {
-        x: number;
-        y: number;
-    }
+import { Cell, Neighbors, clone, get4Neighbors } from "../helpers";
 
-    interface StartCell extends Cell {
-        id: number;
-        value: number;
-    }
+interface StartCell extends Cell {
+    id: number;
+    value: number;
+}
 
-    type Neighbors = (Cell | null)[];
+type Grid = number[][];
 
-    type Grid = number[][];
+const gameString: string = `
+    000006000500
+    000000000000
+    000000060000
+    002000004000
+    000300000000
+    000000020000
+    000000600020
+    602000002000
+    010000000001
+    002000030000
+    000000000300
+    200010004000
+`;
 
-    const gameGrid: Grid = [
-        [0, 0, 5, 0, 7, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 7, 0],
-        [2, 0, 0, 0, 0, 2, 0, 0, 0],
-        [0, 3, 0, 0, 0, 0, 3, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 4, 0, 0, 0, 0],
-        [0, 2, 0, 0, 0, 0, 4, 0, 0],
-    ];
+const gameGrid: Grid = gameString.trim().split(/\n/).filter(x => x).map(x => x.trim().split('').map(x => parseInt(x)));
 
-// const gameGrid: Grid = [
-//     [0,3,0,0,0,0,0,0,0,0,0,1],
-//     [0,0,0,0,1,0,0,0,0,0,0,0],
-//     [0,0,0,2,0,7,0,0,0,3,0,0],
-//     [0,0,0,0,0,0,0,0,1,0,0,0],
-//     [3,0,0,0,0,2,0,6,0,0,0,0],
-//     [0,0,0,4,0,0,0,0,0,0,0,0],
-//     [0,0,0,0,1,0,0,0,0,0,0,0],
-//     [0,0,0,2,0,0,1,0,0,0,5,0],
-//     [0,0,0,0,0,2,0,1,0,1,0,0],
-//     [0,0,5,0,0,0,0,0,0,0,0,0],
-//     [0,0,0,4,0,0,0,0,3,0,0,0],
-//     [0,2,0,0,0,0,0,0,0,0,0,0],
-// ];
+const [startCells, startGrid] = getStartCells(gameGrid);
 
-// const gameGrid: Grid = [
-//     [0,0,0,0,0,4,0,0,0],
-//     [0,0,0,0,2,0,0,0,0],
-//     [2,0,5,0,0,0,0,0,4],
-//     [0,0,0,0,0,0,0,0,0],
-//     [0,3,0,0,0,0,0,0,2],
-//     [0,0,0,0,0,0,0,0,0],
-//     [5,0,0,0,0,0,0,6,0],
-//     [0,0,0,0,5,0,0,0,0],
-//     [0,0,0,0,0,0,0,0,0],
-// ];
+let emptyCellAmount = gameGrid.length * gameGrid[0].length - startCells.reduce((sum, cell) => sum + cell.value, 0);
 
-// const gameGrid: Grid = [
-//     [0,0,0,0,0,0],
-//     [0,5,0,0,5,0],
-//     [0,0,0,4,0,0],
-//     [0,0,0,0,0,0],
-//     [0,0,1,0,0,0],
-//     [0,0,0,0,0,0],
-// ];
+function getStartCells(grid: Grid): [StartCell[], Grid] {
+    const startNumbers = [];
+    let id = 1;
+    const newGrid = clone(grid);
 
-// const gameGrid: Grid = [
-//     [4,0,4,0,0,0,0],
-//     [0,0,0,0,0,0,0],
-//     [0,0,0,0,0,0,5],
-//     [0,0,0,0,0,4,0],
-//     [0,0,0,0,0,0,0],
-//     [2,0,3,0,0,0,0],
-//     [0,0,0,4,0,0,0],
-// ];
-
-// const gameGrid: Grid = [
-//     [0,0,0,0,0,3,0,0,0,0],
-//     [0,0,0,0,0,0,0,2,0,1],
-//     [2,0,0,4,0,0,0,0,0,0],
-//     [0,0,0,0,2,0,5,0,0,0],
-//     [0,0,1,0,0,0,0,0,0,0],
-//     [1,0,0,0,0,0,4,0,0,0],
-//     [0,0,0,2,0,3,0,0,0,0],
-//     [0,3,0,0,0,0,0,0,0,0],
-//     [0,0,0,0,0,0,0,2,0,0],
-//     [1,0,0,0,0,0,3,0,0,0],
-// ];
-
-    const [startCells, startGrid] = getStartCells(gameGrid);
-
-    let emptyCellAmount = gameGrid.length * gameGrid[0].length - startCells.reduce((sum, cell) => sum + cell.value, 0);
-
-// [left, right, top, bottom]
-    function getNeighbors(grid: Grid, cell: Cell): Neighbors {
-        let neighbors: Neighbors = [null, null, null, null];
-        const gridHeight = grid.length;
-        const gridWidth = grid[0].length;
-
-        if (cell.x > 0) {
-            neighbors[0] = {x: cell.x - 1, y: cell.y};
-        }
-
-        if (cell.x < gridHeight - 1) {
-            neighbors[1] = {x: cell.x + 1, y: cell.y};
-        }
-
-        if (cell.y > 0) {
-            neighbors[2] = {x: cell.x, y: cell.y - 1};
-        }
-
-        if (cell.y < gridWidth - 1) {
-            neighbors[3] = {x: cell.x, y: cell.y + 1};
-        }
-
-        return neighbors;
-    }
-
-    function getStartCells(grid: Grid): [StartCell[], Grid] {
-        const startNumbers = [];
-        let id = 1;
-        const newGrid = clone(grid);
-
-        for (let [x, row] of grid.entries()) {
-            for (let [y, cell] of row.entries()) {
-                if (cell !== 0) {
-                    startNumbers.push({x, y, id, value: cell});
-                    newGrid[x][y] = id;
-                    id++;
-                }
+    for (let [x, row] of grid.entries()) {
+        for (let [y, cell] of row.entries()) {
+            if (cell !== 0) {
+                startNumbers.push({x, y, id, value: cell});
+                newGrid[x][y] = id;
+                id++;
             }
         }
-
-        const sorted = startNumbers.sort((a, b) => Math.sign(b.value - a.value));
-
-        console.log(sorted);
-
-        return [sorted, newGrid];
     }
 
-    function clone(grid: Grid): Grid {
-        return grid.map(row => [...row]);
-    }
+    const sorted = startNumbers.sort((a, b) => Math.sign(b.value - a.value));
 
-    function gridToString(grid: Grid): string {
-        let result = '';
+    console.log(sorted);
 
-        for (let [r, row] of grid.entries()) {
-            for (let [c, cell] of row.entries()) {
-                if (cell !== 0) {
-                    result += `${r}${c}${cell}`;
-                }
+    return [sorted, newGrid];
+}
+
+function gridToString(grid: Grid): string {
+    let result = '';
+
+    for (let [r, row] of grid.entries()) {
+        for (let [c, cell] of row.entries()) {
+            if (cell !== 0) {
+                result += `${r}${c}${cell}`;
             }
         }
-
-        return result;
     }
 
-    function checkChainRule(grid: Grid, calcEmpty: boolean = false): boolean {
-        let start: Cell = {x: -1, y: -1};
-        let testGrid = clone(grid);
+    return result;
+}
 
-        let emptyAmount = emptyCellAmount;
+function checkChainRule(grid: Grid, calcEmpty: boolean = false): boolean {
+    let start: Cell = {x: -1, y: -1};
+    let testGrid = clone(grid);
 
-        for (let [x, row] of grid.entries()) {
-            if (start.x > 0 && start.y > 0) {
+    let emptyAmount = emptyCellAmount;
+
+    for (let [x, row] of grid.entries()) {
+        if (start.x > 0 && start.y > 0) {
+            break;
+        }
+
+        for (let [y, cell] of row.entries()) {
+            if (cell === 0) {
+                start = {x, y};
                 break;
             }
-
-            for (let [y, cell] of row.entries()) {
-                if (cell === 0) {
-                    start = {x, y};
-                    break;
-                }
-            }
         }
-
-        if (start.x < 0 && start.y < 0) {
-            return false;
-        }
-
-        testGrid[start.x][start.y] = -1;
-        let neighbors = getNeighbors(testGrid, start);
-        neighbors = neighbors.filter(i => i && testGrid[i.x][i.y] === 0);
-
-        if (calcEmpty) {
-            emptyAmount = grid.reduce((i, row) => {
-                return i + row.reduce((j, number) => {
-                    return j + (number === 0 ? 1 : 0);
-                }, 0);
-            }, 0);
-        }
-
-        function traverse(neighbors: Neighbors) {
-            if (neighbors.length === 0) {
-                return;
-            }
-
-            for (let n of neighbors) {
-                if (n !== null) {
-                    testGrid[n.x][n.y] = -1;
-                    const newNeighbors = getNeighbors(testGrid, n).filter(i => i && testGrid[i.x][i.y] === 0);
-
-                    traverse(newNeighbors);
-                }
-            }
-        }
-
-        traverse(neighbors);
-
-        let counter = testGrid.reduce((i, row) => {
-            return i + row.reduce((j, number) => {
-                return j + (number === -1 ? 1 : 0);
-            }, 0);
-        }, 0);
-
-        return counter === emptyAmount;
     }
 
-    function checkBlockRule(grid: Grid): boolean {
-        const gridLen = grid.length;
-        const rowLen = grid[0].length;
+    if (start.x < 0 && start.y < 0) {
+        return false;
+    }
 
-        for (let x = 0; x < gridLen - 1; x++) {
-            for (let y = 0; y < rowLen - 1; y++) {
-                const cell1 = grid[x][y];
-                const cell2 = grid[x][y + 1];
-                const cell3 = grid[x + 1][y];
-                const cell4 = grid[x + 1][y + 1];
+    testGrid[start.x][start.y] = -1;
+    let neighbors = get4Neighbors(testGrid, start);
+    neighbors = neighbors.filter(i => i && testGrid[i.x][i.y] === 0);
 
-                if (cell1 === 0 && cell2 === 0 && cell3 === 0 && cell4 === 0) {
-                    return false;
-                }
-            }
+    if (calcEmpty) {
+        emptyAmount = grid.reduce((i, row) => {
+            return i + row.reduce((j, number) => {
+                return j + (number === 0 ? 1 : 0);
+            }, 0);
+        }, 0);
+    }
+
+    function traverse(neighbors: Neighbors) {
+        if (neighbors.length === 0) {
+            return;
         }
 
+        for (let n of neighbors) {
+            if (n !== null) {
+                testGrid[n.x][n.y] = -1;
+                const newNeighbors = get4Neighbors(testGrid, n).filter(i => i && testGrid[i.x][i.y] === 0);
+
+                traverse(newNeighbors);
+            }
+        }
+    }
+
+    traverse(neighbors);
+
+    let counter = testGrid.reduce((i, row) => {
+        return i + row.reduce((j, number) => {
+            return j + (number === -1 ? 1 : 0);
+        }, 0);
+    }, 0);
+
+    return counter === emptyAmount;
+}
+
+function checkBlockRule(grid: Grid): boolean {
+    const gridLen = grid.length;
+    const rowLen = grid[0].length;
+
+    for (let x = 0; x < gridLen - 1; x++) {
+        for (let y = 0; y < rowLen - 1; y++) {
+            const cell1 = grid[x][y];
+            const cell2 = grid[x][y + 1];
+            const cell3 = grid[x + 1][y];
+            const cell4 = grid[x + 1][y + 1];
+
+            if (cell1 === 0 && cell2 === 0 && cell3 === 0 && cell4 === 0) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+function checkPerm(perm: number[], count: number): boolean {
+    if (count > 4) {
         return true;
     }
 
-    function checkPerm(perm: number[], count: number): boolean {
-        if (count > 4) {
-            return true;
+    let counter = 0;
+    for (let num of perm) {
+        if (num === 1) {
+            counter++;
         }
-
-        let counter = 0;
-        for (let num of perm) {
-            if (num === 1) {
-                counter++;
-            }
-        }
-
-        return counter < count;
     }
 
-    function makeNeighborsPermutations(): number[][] {
-        const permutations: number[][] = [];
+    return counter < count;
+}
 
-        function permute(permutation: number[]) {
-            if (permutation.length === 4) {
-                permutations.push(permutation);
-                return;
-            }
+function makeNeighborsPermutations(): number[][] {
+    const permutations: number[][] = [];
 
-            for (let val of [0, 1]) {
-                permutation.push(val);
+    function permute(permutation: number[]) {
+        if (permutation.length === 4) {
+            permutations.push(permutation);
+            return;
+        }
 
-                permute([...permutation]);
+        for (let val of [0, 1]) {
+            permutation.push(val);
 
-                permutation.pop();
+            permute([...permutation]);
+
+            permutation.pop();
+        }
+    }
+
+    permute([]);
+
+    return permutations;
+}
+
+function makePossibleGrids(startCells: StartCell[], startGrid: Grid): Grid[] {
+    const grids: Grid[] = [];
+    const permutations = makeNeighborsPermutations();
+
+    function traverse(grid: Grid, gridSet: Set<string>, cellIter: number, valueIter: number) {
+        const startNumbers = [];
+        const id = startCells[cellIter].id;
+        const value = startCells[cellIter].value;
+
+        for (let [x, row] of grid.entries()) {
+            for (let [y, cell] of row.entries()) {
+                if (cell === id) {
+                    startNumbers.push({x, y});
+                }
             }
         }
 
-        permute([]);
+        if (grids.length > 0) {
+            return;
+        }
 
-        return permutations;
-    }
+        for (let start of startNumbers) {
 
-    function makePossibleGrids(startCells: StartCell[], startGrid: Grid): Grid[] {
-        const grids: Grid[] = [];
-        const permutations = makeNeighborsPermutations();
+            const neighbors = get4Neighbors(grid, start);
 
-        function traverse(grid: Grid, gridSet: Set<string>, cellIter: number, valueIter: number) {
-            const startNumbers = [];
-            const id = startCells[cellIter].id;
-            const value = startCells[cellIter].value;
-
-            for (let [x, row] of grid.entries()) {
-                for (let [y, cell] of row.entries()) {
-                    if (cell === id) {
-                        startNumbers.push({x, y});
-                    }
+            for (let n of neighbors) {
+                if (n && grid[n.x][n.y] !== 0 && grid[n.x][n.y] !== id) {
+                    return;
                 }
             }
 
-            if (grids.length > 0) {
-                return;
-            }
-
-            for (let start of startNumbers) {
-
-                const neighbors = getNeighbors(grid, start);
-
-                for (let n of neighbors) {
-                    if (n && grid[n.x][n.y] !== 0 && grid[n.x][n.y] !== id) {
-                        return;
-                    }
-                }
-
-                if (valueIter >= value - 1) {
-                    if (valueIter == value - 1) {
-                        const gridString = gridToString(grid);
-                        if (startCells[cellIter + 1]) {
-                            if (!gridSet.has(gridString)) {
-                                if (checkChainRule(grid, true)) {
-                                    traverse(grid, new Set(), cellIter + 1, 0);
-                                }
-                                gridSet.add(gridString);
+            if (valueIter >= value - 1) {
+                if (valueIter == value - 1) {
+                    const gridString = gridToString(grid);
+                    if (startCells[cellIter + 1]) {
+                        if (!gridSet.has(gridString)) {
+                            if (checkChainRule(grid, true)) {
+                                traverse(grid, new Set(), cellIter + 1, 0);
                             }
-                        } else {
-                            if (!gridSet.has(gridString)) {
-                                if (checkBlockRule(grid) && checkChainRule(grid)) {
-                                    grids.push(grid);
-                                }
-                                gridSet.add(gridString);
+                            gridSet.add(gridString);
+                        }
+                    } else {
+                        if (!gridSet.has(gridString)) {
+                            if (checkBlockRule(grid) && checkChainRule(grid)) {
+                                grids.push(grid);
                             }
+                            gridSet.add(gridString);
                         }
                     }
+                }
+                continue;
+            }
+
+            for (let p of permutations) {
+                if (!checkPerm(p, Math.max(0, value - valueIter))) {
                     continue;
                 }
 
-                for (let p of permutations) {
-                    if (!checkPerm(p, Math.max(0, value - valueIter))) {
-                        continue;
-                    }
+                const newGrid = clone(grid);
+                let nextCells = 0;
 
-                    const newGrid = clone(grid);
-                    let nextCells = 0;
+                for (let [i, n] of neighbors.entries()) {
+                    if (n !== null && newGrid[n.x][n.y] === 0) {
+                        if (p[i]) {
+                            const nextNeighbors = get4Neighbors(newGrid, n).filter(n => n);
 
-                    for (let [i, n] of neighbors.entries()) {
-                        if (n !== null && newGrid[n.x][n.y] === 0) {
-                            if (p[i]) {
-                                const nextNeighbors = getNeighbors(newGrid, n).filter(n => n);
-
-                                if (nextNeighbors.every((n) => (
-                                    (newGrid[n!.x][n!.y] === 0 || newGrid[n!.x][n!.y] === id)
-                                ))) {
-                                    newGrid[n.x][n.y] = id;
-                                    nextCells++;
-                                }
+                            if (nextNeighbors.every((n) => (
+                                (newGrid[n!.x][n!.y] === 0 || newGrid[n!.x][n!.y] === id)
+                            ))) {
+                                newGrid[n.x][n.y] = id;
+                                nextCells++;
                             }
                         }
                     }
+                }
 
-                    if (nextCells) {
-                        traverse(newGrid, gridSet, cellIter, valueIter + nextCells);
-                    }
+                if (nextCells) {
+                    traverse(newGrid, gridSet, cellIter, valueIter + nextCells);
                 }
             }
         }
-
-        traverse(startGrid, new Set(), 0, 0);
-
-        return grids;
     }
 
-    function solve() {
-        return makePossibleGrids(startCells, startGrid);
-    }
+    traverse(startGrid, new Set(), 0, 0);
 
-    console.time('solve');
+    return grids;
+}
 
-    const solution = solve();
+function solve() {
+    return makePossibleGrids(startCells, startGrid);
+}
 
-    console.timeEnd('solve');
+console.time('solve');
 
-    for (let [i, s] of solution.entries()) {
-        console.log(`##Solution ${i + 1}`);
-        console.log(s.map(row => row.map(number => number ? 1 : 0)));
-    }
-})();
+const solution = solve();
+
+console.timeEnd('solve');
+
+for (let [i, s] of solution.entries()) {
+    console.log(`##Solution ${i + 1}`);
+    console.log(s.map(row => row.map(number => number ? 1 : 0)));
+}

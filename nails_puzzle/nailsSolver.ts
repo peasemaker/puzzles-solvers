@@ -1,4 +1,5 @@
 import levels from './levels';
+import { Cell, Neighbors, clone, get4Neighbors } from '../helpers';
 
 const fs = require('fs');
 const solutions = require('./solutions.json');
@@ -13,13 +14,6 @@ for (let levelKey of Object.keys(levels)) {
     console.log(levelKey);
 
     ((gameString) => {
-        interface Cell {
-            x: number;
-            y: number;
-        }
-
-        type Neighbors = (Cell | null)[];
-
         type Grid = number[][];
 
         interface StartCell extends Cell {
@@ -28,7 +22,7 @@ for (let levelKey of Object.keys(levels)) {
 
         const gameGrid: Grid = gameString.trim().split(/\n/).filter(x => x).map(x => x.trim().split('').map(x => parseInt(x)));
 
-        if (gameGrid.length !== 11 || gameGrid.some(row => row.length !== 11)) {
+        if (gameGrid.length !== 9 || gameGrid.some(row => row.length !== 9)) {
             console.log('wrong grid');
             return;
         }
@@ -48,34 +42,6 @@ for (let levelKey of Object.keys(levels)) {
                 return j + (cell !== 0 ? 1 : 0);
             }, 0);
         }, 0);
-
-        function clone(arr: any[]): any[] {
-            return arr.map(row => [...row]);
-        }
-
-        function getNeighbors(grid: Grid, cell: Cell): Neighbors {
-            let neighbors: Neighbors = [null, null, null, null];
-            const gridHeight = grid.length;
-            const gridWidth = grid[0].length;
-
-            if (cell.x > 0) {
-                neighbors[0] = {x: cell.x - 1, y: cell.y};
-            }
-
-            if (cell.x < gridHeight - 1) {
-                neighbors[1] = {x: cell.x + 1, y: cell.y};
-            }
-
-            if (cell.y > 0) {
-                neighbors[2] = {x: cell.x, y: cell.y - 1};
-            }
-
-            if (cell.y < gridWidth - 1) {
-                neighbors[3] = {x: cell.x, y: cell.y + 1};
-            }
-
-            return neighbors;
-        }
 
         function getStartCells(grid: Grid): [StartCell[], Grid] {
             const startNumbers = [];
@@ -271,7 +237,7 @@ for (let levelKey of Object.keys(levels)) {
             }
 
             testGrid[start.x][start.y] = -1;
-            let neighbors = getNeighbors(testGrid, start);
+            let neighbors = get4Neighbors(testGrid, start);
             neighbors = neighbors.filter(i => i && testGrid[i.x][i.y] !== -1 && testGrid[i.x][i.y] !== 0);
 
             const fillAmount = grid.reduce((i, row) => {
@@ -288,7 +254,7 @@ for (let levelKey of Object.keys(levels)) {
                 for (let n of neighbors) {
                     if (n !== null) {
                         testGrid[n.x][n.y] = -1;
-                        const newNeighbors = getNeighbors(testGrid, n).filter(i => i && testGrid[i.x][i.y] !== -1 && testGrid[i.x][i.y] !== 0);
+                        const newNeighbors = get4Neighbors(testGrid, n).filter(i => i && testGrid[i.x][i.y] !== -1 && testGrid[i.x][i.y] !== 0);
 
                         traverse(newNeighbors);
                     }
@@ -312,7 +278,7 @@ for (let levelKey of Object.keys(levels)) {
             for (let [x, row] of grid.entries()) {
                 for (let [y, cell] of row.entries()) {
                     if (cell !== 0) {
-                        const neighbors = getNeighbors(grid, {x, y});
+                        const neighbors = get4Neighbors(grid, {x, y});
 
                         for (let n of neighbors) {
                             if (n !== null) {
@@ -370,7 +336,7 @@ for (let levelKey of Object.keys(levels)) {
 
                     for (let c of plank) {
                         newGrid[c.x][c.y] = c.id;
-                        let neighbors = getNeighbors(grid, c).filter(n => n);
+                        let neighbors = get4Neighbors(grid, c).filter(n => n);
 
                         if (neighbors.some(n => connections[c.id - 1].never.has(grid[n!.x][n!.y]))) {
                             flag = true;
@@ -433,7 +399,7 @@ for (let levelKey of Object.keys(levels)) {
                             }
 
                             for (let p2 of planks2) {
-                                let neighbors = getNeighbors(testGrid, p2).filter(n => n);
+                                let neighbors = get4Neighbors(testGrid, p2).filter(n => n);
 
                                 if (neighbors.some(n => testGrid[n!.x][n!.y] == id1)) {
                                     isConnected = true;

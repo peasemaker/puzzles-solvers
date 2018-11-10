@@ -54,7 +54,7 @@ function drawSolution(solution: string[][], title: string) {
 window.onload = function() {
     for (let levelKey of Object.keys(solutions)) {
         const levelNumber = parseInt(levelKey.match(/\d+/)![0]);
-        if (levelNumber > 224) {
+        if (levelNumber > 90 && levelNumber < 180) {
             drawSolution(solutions[levelKey], levelKey);
         }
     }
