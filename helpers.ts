@@ -19,12 +19,12 @@ export function get4Neighbors(grid: any[][], cell: Cell): Neighbors {
         neighbors[0] = {x: cell.x - 1, y: cell.y};
     }
 
-    if (cell.x < gridHeight - 1) {
-        neighbors[1] = {x: cell.x + 1, y: cell.y};
+    if (cell.y > 0) {
+        neighbors[1] = {x: cell.x, y: cell.y - 1};
     }
 
-    if (cell.y > 0) {
-        neighbors[2] = {x: cell.x, y: cell.y - 1};
+    if (cell.x < gridHeight - 1) {
+        neighbors[2] = {x: cell.x + 1, y: cell.y};
     }
 
     if (cell.y < gridWidth - 1) {
