@@ -1,24 +1,17 @@
-export interface Level {
-    signs: string,
-    fields: string
-}
-
-function generateStandardFields(): string {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+function generateStandardFields() {
     let fields = '';
-
     for (let x = 0; x < 9; x++) {
         for (let y = 0; y < 9; y++) {
-            fields += Math.floor(x / 3) * 3 + Math.floor(y / 3) + 1 ;
+            fields += Math.floor(x / 3) * 3 + Math.floor(y / 3) + 1;
         }
         fields += '\n';
     }
-
     return fields;
 }
-
 const standardFields = generateStandardFields();
-
-const levels: { [key: string]: Level } = {
+const levels = {
     level2: {
         signs: `
             .. <. >. .. >. >. .. >. >.
@@ -409,5 +402,5 @@ const levels: { [key: string]: Level } = {
         `
     }
 };
-
-export default levels;
+exports.default = levels;
+//# sourceMappingURL=levels.js.map

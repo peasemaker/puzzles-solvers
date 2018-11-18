@@ -12,7 +12,7 @@ for (let levelKey of Object.keys(levels_1.default)) {
     console.log(levelKey);
     ((gameString) => {
         const gameGrid = gameString.trim().split(/\n/).filter(x => x).map(x => x.trim().split('').map(x => parseInt(x)));
-        if (gameGrid.length !== 9 || gameGrid.some(row => row.length !== 9)) {
+        if (gameGrid.length !== 10 || gameGrid.some(row => row.length !== 10)) {
             console.log('wrong grid');
             return;
         }
